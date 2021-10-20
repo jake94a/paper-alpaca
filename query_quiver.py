@@ -4,28 +4,32 @@ filter by transactions that happened today
 """
 
 import requests
+import os
 from datetime import date, datetime, timedelta
 
-from api import submit_order
+
+# url_codes = [{"CONGRESS": "congresstrading"}, {"CONTRACTS": "govcontractsall"}]
 
 TODAY = datetime.today()
-
-api_token = ""
-
-headers = {
-    "Authorization": f"Token {api_token}",
+QUIVER_API_TOKEN = os.environ["QUIVER_API_TOKEN"]
+QUIVER_API_URL = f"https://api.quiverquant.com/beta/live/congresstrading"
+HEADERS = {
+    "Authorization": f"Token {QUIVER_API_TOKEN}",
     "accept": "application/json",
 }
-API_URL = "https://api.quiverquant.com/beta/live/senatetrading"
 
-res = requests.get(API_URL, headers=headers).json()
 
-recent_orders = []
-for t in res:
-    if datetime.strptime(t["Date"], "%Y-%m-%d") > (TODAY - timedelta(days=30)):
-        recent_orders.append(t)
+def get_recent_orders():
+    res = requests.get(QUIVER_API_URL, headers=HEADERS).json()
 
-print(recent_orders)
+    recent_orders = []
+    for t in res:
+        if datetime.strptime(t["ReportDate"], "%Y-%m-%d") > (
+            TODAY - timedelta(days=30)
+        ):
+            recent_orders.append(t)
+    return recent_orders
+
 
 """
 Ticker:
@@ -34,5 +38,3 @@ Person:
 Transaction:
 Amount:
 """
-
-submit_order(res[0]["Ticker"], 1, res[0]["Transaction"])
